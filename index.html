@@ -1,39 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Grade 4 AI Bot</title>
+    <meta charset="UTF-8">
+    <title>Grade 4 Super AI</title>
     <style>
-        body { background: #121212; color: #00ff00; font-family: 'Courier New', monospace; text-align: center; }
-        #chat-window { width: 80%; max-width: 500px; height: 300px; border: 2px solid #00ff00; margin: 20px auto; padding: 15px; overflow-y: auto; background: #000; text-align: left; }
-        input { width: 60%; padding: 10px; background: #000; border: 1px solid #00ff00; color: #00ff00; }
-        button { padding: 10px 20px; background: #00ff00; color: #000; border: none; cursor: pointer; font-weight: bold; }
+        body { background: #0f0f23; color: #00d4ff; font-family: 'Segoe UI', sans-serif; text-align: center; }
+        #chat-window { width: 90%; max-width: 600px; height: 400px; background: #1a1a2e; border: 2px solid #00d4ff; margin: 20px auto; padding: 20px; overflow-y: auto; border-radius: 15px; box-shadow: 0 0 20px #00d4ff; }
+        input { width: 70%; padding: 12px; border-radius: 10px; border: none; outline: none; }
+        button { padding: 12px 25px; border-radius: 10px; border: none; background: #00d4ff; color: #1a1a2e; cursor: pointer; font-weight: bold; }
+        .bot { color: #fff; background: #333; padding: 10px; border-radius: 10px; margin: 5px 0; text-align: left; }
+        .user { color: #00d4ff; text-align: right; margin: 5px 0; }
     </style>
 </head>
 <body>
-    <h1>SYSTEM_AI_ONLINE 🤖</h1>
-    <div id="log">Welcome. I am running on your website!</div>
-    <div id="chat-window"></div>
-    <input type="text" id="userInput" placeholder="Type a message...">
-    <button onclick="talk()">SEND</button>
+
+    <h1>🧠 Super Brain AI</h1>
+    <div id="chat-window"><p class="bot">Bot: Hello! I am a smart AI. Ask me anything!</p></div>
+    <input type="text" id="userInput" placeholder="Ask a question...">
+    <button onclick="askAI()">ASK</button>
 
     <script>
-        function talk() {
-            var input = document.getElementById("userInput").value.toLowerCase();
-            var chat = document.getElementById("chat-window");
-            var reply = "I am still learning, but you are a great coder!";
+        async function askAI() {
+            const input = document.getElementById("userInput").value;
+            const log = document.getElementById("chat-window");
+            if (!input) return;
 
-            if (input.includes("hi") || input.includes("hello")) {
-                reply = "Greetings, Human Creator!";
-            } else if (input.includes("who is the prime minister")) {
-                reply = "It is Mark Carney! (I am more up-to-date than GPT4!)";
-            } else if (input.includes("joke")) {
-                reply = "Why did the computer go to the doctor? Because it had a virus!";
-            }
-
-            chat.innerHTML += "<p style='color:white'>> " + input + "</p>";
-            chat.innerHTML += "<p>BOT: " + reply + "</p>";
+            log.innerHTML += `<div class="user">You: ${input}</div>`;
             document.getElementById("userInput").value = "";
-            chat.scrollTop = chat.scrollHeight;
+            log.innerHTML += `<div class="bot" id="loading">Thinking...</div>`;
+            log.scrollTop = log.scrollHeight;
+
+            try {
+                // This connects to a real AI "Brain" for free
+                const response = await fetch("https://api-inference.huggingface.co", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ inputs: input })
+                });
+                const data = await response.json();
+                
+                document.getElementById("loading").remove();
+                const reply = data[0].generated_text || "I'm sleepy. Ask again!";
+                log.innerHTML += `<div class="bot">Bot: ${reply}</div>`;
+            } catch (error) {
+                document.getElementById("loading").innerText = "Error: Brain is tired!";
+            }
+            log.scrollTop = log.scrollHeight;
         }
     </script>
 </body>
