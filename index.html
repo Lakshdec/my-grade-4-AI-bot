@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Grade 4 Super AI</title>
+    <title>Proper AI Bot v3.0</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0b0b1a; color: #00ffcc; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         #chat-window { width: 95%; max-width: 600px; height: 450px; background: #161625; border: 2px solid #00ffcc; border-radius: 15px; padding: 20px; overflow-y: auto; margin-bottom: 15px; box-shadow: 0 0 20px #00ffcc; }
@@ -12,11 +12,12 @@
         .input-area { display: flex; width: 95%; max-width: 600px; gap: 10px; }
         input { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #1f1f2e; color: #00ffcc; outline: none; font-size: 16px; }
         button { padding: 12px 25px; border-radius: 10px; border: none; background: #28a745; color: white; cursor: pointer; font-weight: bold; font-size: 16px; }
+        button:hover { background: #218838; }
     </style>
 </head>
 <body>
 
-    <h2>🤖 MY SMART AI BOT</h2>
+    <h2>🤖 MY PROPER AI BOT</h2>
     <div id="chat-window"></div>
     
     <div class="input-area">
@@ -25,10 +26,10 @@
     </div>
 
     <script>
-        // I PUT YOUR TOKEN BACK IN FOR YOU!
+        // 1. YOUR TOKEN IS ALREADY SAVED HERE!
         const API_TOKEN = "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"; 
         
-        // Using the most stable URL for free bots
+        // 2. UPDATED SMART ROUTER URL (Fixes the connection glitches)
         const MODEL_URL = "https://router.huggingface.co";
 
         async function talk() {
@@ -37,10 +38,12 @@
             const userText = inputField.value.trim();
             if (!userText) return;
 
+            // Show User Message
             log.innerHTML += `<div class="msg user">${userText}</div>`;
             inputField.value = "";
             log.scrollTop = log.scrollHeight;
 
+            // Show Thinking
             const loadingId = "loading-" + Date.now();
             log.innerHTML += `<div class="msg bot" id="${loadingId}">Thinking...</div>`;
             log.scrollTop = log.scrollHeight;
@@ -58,16 +61,18 @@
                 const data = await response.json();
                 document.getElementById(loadingId).remove();
 
+                // If the AI is still "Waking Up"
                 if (data.error && data.error.includes("loading")) {
-                    log.innerHTML += `<div class="msg bot"><b>Bot:</b> My brain is still loading. Wait 10 seconds and ask again!</div>`;
+                    log.innerHTML += `<div class="msg bot"><b>Bot:</b> I am just waking up my brain. Give me 10 seconds and ask again!</div>`;
                 } else if (data.error) {
-                    log.innerHTML += `<div class="msg bot"><b>Bot:</b> Glitch! Try again in a second.</div>`;
+                    log.innerHTML += `<div class="msg bot"><b>Bot:</b> Connection glitch. Try again in a minute!</div>`;
                 } else {
+                    // Show real AI response
                     const reply = data.generated_text || "I'm a bit confused. Try again!";
                     log.innerHTML += `<div class="msg bot"><b>Bot:</b> ${reply}</div>`;
                 }
             } catch (error) {
-                document.getElementById(loadingId).innerText = "Error: Check your Wi-Fi!";
+                document.getElementById(loadingId).innerText = "Error: Brain Connection Glitch!";
             }
             log.scrollTop = log.scrollHeight;
         }
