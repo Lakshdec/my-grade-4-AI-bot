@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI Hint Master</title>
+    <meta charset="UTF-8">
+    <title>AI Hint Bot</title>
     <style>
         body { background: #000; color: #0f0; font-family: 'Courier New', monospace; text-align: center; padding: 20px; }
         #chat-window { width: 90%; max-width: 600px; height: 400px; border: 2px solid #0f0; margin: 20px auto; padding: 15px; overflow-y: auto; background: #111; text-align: left; border-radius: 10px; }
@@ -9,19 +10,18 @@
         button { padding: 10px 20px; background: #0f0; color: #000; border: none; cursor: pointer; font-weight: bold; }
         .bot { color: #0f0; margin: 10px 0; }
         .user { color: #fff; margin: 10px 0; text-align: right; }
-        a { color: gold; text-decoration: none; font-size: 1.2em; }
+        a { color: gold; text-decoration: none; font-size: 1.2em; display: block; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <h1>🤖 WIKI-BOT & HINT MASTER</h1>
-    <div id="chat-window"><p class="bot">SYSTEM ONLINE. Type a topic or ask for a "hint"!</p></div>
-    <input type="text" id="userInput" placeholder="Search Wiki or ask for 'hint'..." onkeypress="if(event.key === 'Enter') askAI()">
-    <button onclick="askAI()">SEND</button>
-    <br><br>
+    <h1>🤖 BOT COMMAND CENTER</h1>
+    <div id="chat-window"><p class="bot">SYSTEM ONLINE. Ask for a "hint" to help your game!</p></div>
+    <input type="text" id="userInput" placeholder="Ask for 'hint' or a Wiki topic..." onkeypress="if(event.key === 'Enter') askBot()">
+    <button onclick="askBot()">SEND</button>
     <a href="game.html">🕹️ OPEN 3D GAME</a>
 
     <script>
-        async function askAI() {
+        async function askBot() {
             const inputField = document.getElementById("userInput");
             const input = inputField.value.trim();
             const log = document.getElementById("chat-window");
@@ -31,29 +31,27 @@
             inputField.value = "";
             log.scrollTop = log.scrollHeight;
 
-            // --- 1. GAME HINT LOGIC ---
+            // 1. GAME HINT LOGIC
             if (input.toLowerCase().includes("hint") || input.toLowerCase().includes("help")) {
-                const hint = "SECRET HINT: Go to the very bottom right corner to find the Gold!";
-                localStorage.setItem("mazeHint", hint); // This puts it in the secret mailbox
-                log.innerHTML += `<div class="bot">BOT: 🔑 Signal Sent! Check the 3D Game tab for your hint.</div>`;
+                const hintText = "SECRET: Go to the very bottom right of the map!";
+                localStorage.setItem("mazeHint", hintText); // Uses the 'mazeHint' mailbox
+                log.innerHTML += `<div class="bot">BOT: 🔑 Message sent to game! Go check the game window.</div>`;
                 return;
             }
 
-            // --- 2. WIKI SEARCH LOGIC ---
+            // 2. WIKI SEARCH LOGIC
             const loadingId = "load-" + Date.now();
-            log.innerHTML += `<div class="bot" id="${loadingId}">[SEARCHING WIKIPEDIA...]</div>`;
+            log.innerHTML += `<div class="bot" id="${loadingId}">[SEARCHING...]</div>`;
 
             try {
                 const url = `https://en.wikipedia.org{encodeURIComponent(input)}?redirect=true&origin=*`;
                 const response = await fetch(url);
                 const data = await response.json();
-                
                 document.getElementById(loadingId).remove();
-                
-                let answer = data.extract || "I couldn't find that in the database. Try 'Mars' or 'Pizza'.";
+                let answer = data.extract || "I couldn't find that. Try 'Space'.";
                 log.innerHTML += `<div class="bot">BOT: ${answer}</div>`;
             } catch (error) {
-                document.getElementById(loadingId).innerText = "ERROR: Connection Glitch!";
+                document.getElementById(loadingId).innerText = "ERROR: Connection glitch!";
             }
             log.scrollTop = log.scrollHeight;
         }
