@@ -1,78 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>My Smart AI Bot</title>
+    <title>Wiki-Brain AI</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0b0b1a; color: #00ffcc; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        #chat-window { width: 95%; max-width: 600px; height: 450px; background: #161625; border: 2px solid #00ffcc; border-radius: 15px; padding: 20px; overflow-y: auto; margin-bottom: 15px; box-shadow: 0 0 20px #00ffcc; }
-        .msg { margin: 10px 0; padding: 12px; border-radius: 12px; line-height: 1.4; max-width: 80%; font-size: 16px; }
-        .user { background: #007bff; color: white; align-self: flex-end; margin-left: auto; text-align: right; }
-        .bot { background: #2c2c3e; color: #ffffff; align-self: flex-start; }
-        .input-area { display: flex; width: 95%; max-width: 600px; gap: 10px; }
-        input { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #1f1f2e; color: #00ffcc; outline: none; font-size: 16px; }
-        button { padding: 12px 25px; border-radius: 10px; border: none; background: #28a745; color: white; cursor: pointer; font-weight: bold; font-size: 16px; }
-        button:hover { background: #218838; }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; text-align: center; padding: 20px; }
+        #chat-window { width: 90%; max-width: 600px; height: 400px; border: 2px solid #0f0; margin: 20px auto; padding: 15px; overflow-y: auto; background: #111; text-align: left; border-radius: 10px; }
+        input { width: 70%; padding: 10px; background: #000; border: 1px solid #0f0; color: #0f0; outline: none; }
+        button { padding: 10px 20px; background: #0f0; color: #000; border: none; cursor: pointer; font-weight: bold; }
+        .bot { color: #0f0; margin: 10px 0; }
+        .user { color: #fff; margin: 10px 0; text-align: right; }
     </style>
 </head>
 <body>
-
-    <h2>🤖 MY PROPER AI BOT</h2>
-    <div id="chat-window"></div>
-    
-    <div class="input-area">
-        <input type="text" id="userInput" placeholder="Ask me anything..." onkeypress="if(event.key === 'Enter') talk()">
-        <button onclick="talk()">SEND</button>
-    </div>
+    <h1>🤖 WIKI-BRAIN v4.0</h1>
+    <div id="chat-window"><p class="bot">SYSTEM ONLINE. ASK ME ABOUT ANYTHING (Mars, Lego, Lions)...</p></div>
+    <input type="text" id="userInput" placeholder="Search a topic..." onkeypress="if(event.key === 'Enter') askWiki()">
+    <button onclick="askWiki()">SEND</button>
 
     <script>
-        // 1. YOUR TOKEN IS ALREADY SAVED HERE!
-        const API_TOKEN = "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"; 
-        
-        // 2. UPDATED SMART ROUTER URL (Fixes the connection glitches)
-        const MODEL_URL = "https://router.huggingface.co";
-
-        async function talk() {
+        async function askWiki() {
             const inputField = document.getElementById("userInput");
+            const input = inputField.value.trim();
             const log = document.getElementById("chat-window");
-            const userText = inputField.value.trim();
-            if (!userText) return;
+            if (!input) return;
 
-            // Show User Message
-            log.innerHTML += `<div class="msg user">${userText}</div>`;
+            log.innerHTML += `<div class="user">You: ${input}</div>`;
             inputField.value = "";
-            log.scrollTop = log.scrollHeight;
-
-            // Show Thinking
-            const loadingId = "loading-" + Date.now();
-            log.innerHTML += `<div class="msg bot" id="${loadingId}">Thinking...</div>`;
+            const loadingId = "load-" + Date.now();
+            log.innerHTML += `<div class="bot" id="${loadingId}">[SEARCHING WORLD DATABASE...]</div>`;
             log.scrollTop = log.scrollHeight;
 
             try {
-                const response = await fetch(MODEL_URL, {
-                    method: "POST",
-                    headers: { 
-                        "Authorization": `Bearer ${API_TOKEN}`,
-                        "Content-Type": "application/json" 
-                    },
-                    body: JSON.stringify({ inputs: userText })
-                });
-
+                // This connects to Wikipedia's REST API summary service
+                const url = `https://en.wikipedia.org{encodeURIComponent(input)}?redirect=true`;
+                const response = await fetch(url);
                 const data = await response.json();
+                
                 document.getElementById(loadingId).remove();
-
-                // Check if the AI is still "Waking Up"
-                if (data.error && data.error.includes("loading")) {
-                    log.innerHTML += `<div class="msg bot"><b>Bot:</b> I am just waking up my brain. Give me 15 seconds and ask again!</div>`;
-                } else if (data.error) {
-                    log.innerHTML += `<div class="msg bot"><b>Bot:</b> Connection glitch. Try again in a minute!</div>`;
+                
+                let answer = "";
+                if (data.extract) {
+                    answer = data.extract; // This is the short summary
                 } else {
-                    // Show real AI response
-                    const reply = data.generated_text || "I'm a bit confused. Try again!";
-                    log.innerHTML += `<div class="msg bot"><b>Bot:</b> ${reply}</div>`;
+                    answer = "I couldn't find that. Try a simpler topic like 'Space' or 'Dolphins'.";
                 }
+
+                log.innerHTML += `<div class="bot">BOT: ${answer}</div>`;
             } catch (error) {
-                document.getElementById(loadingId).innerText = "Error: Brain Connection Glitch!";
+                document.getElementById(loadingId).innerText = "ERROR: Satellite connection lost. Try again!";
             }
             log.scrollTop = log.scrollHeight;
         }
