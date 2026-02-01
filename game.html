@@ -15,7 +15,7 @@
     <div id="ui">
         <b>📐 3D RAYCAST ENGINE</b><br>
         W,S: Move | A,D: Turn<br>
-        <div id="hint-display">WAITING FOR BOT...</div>
+        <div id="hint-display">WAITING FOR BOT SIGNAL...</div>
     </div>
     <div id="win-msg">🏆 YOU FOUND THE GOLD!</div>
     <canvas id="gameCanvas"></canvas>
@@ -30,14 +30,14 @@
         canvas.height = window.innerHeight;
 
         const map = [
-           ,
-           ,
-           ,
-           ,
-           ,
-           ,
-           ,
-           
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1],
+            [1,0,1,0,0,0,0,1,0,1],
+            [1,0,1,0,1,1,0,1,0,1],
+            [1,0,0,0,1,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,2,1],
+            [1,1,1,1,1,1,1,1,1,1]
         ];
         const tileSize = 64;
         let player = { x: 96, y: 96, angle: 0 };
@@ -46,9 +46,9 @@
         window.addEventListener("keydown", (e) => keys[e.key.toLowerCase()] = true);
         window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
 
-        // --- CHECK SECRET MAILBOX ---
+        // --- CHECK SECRET LOCKER ---
         function checkHint() {
-            const hint = localStorage.getItem("mazeHint"); // Checks 'mazeHint'
+            const hint = localStorage.getItem("mazeHint"); 
             if (hint) {
                 hintDisplay.innerText = "HINT: " + hint;
             }
@@ -67,7 +67,7 @@
                     dist += 1;
                     let tx = Math.floor((player.x + Math.cos(rayAngle) * dist) / tileSize);
                     let ty = Math.floor((player.y + Math.sin(rayAngle) * dist) / tileSize);
-                    if (ty < 0 || ty >= map.length || tx < 0 || tx >= map.length) hit = 1;
+                    if (ty < 0 || ty >= map.length || tx < 0 || tx >= map[0].length) hit = 1;
                     else if (map[ty][tx] > 0) hit = map[ty][tx];
                 }
                 let fixDist = dist * Math.cos(rayAngle - player.angle);
@@ -86,8 +86,8 @@
             if (keys['d']) player.angle += 0.05;
 
             let tx = Math.floor(nextX / tileSize), ty = Math.floor(nextY / tileSize);
-            if (map[ty][tx] === 0) { player.x = nextX; player.y = nextY; winMsg.style.display = "none"; }
-            else if (map[ty][tx] === 2) { winMsg.style.display = "block"; }
+            if (map[ty] && map[ty][tx] === 0) { player.x = nextX; player.y = nextY; winMsg.style.display = "none"; }
+            else if (map[ty] && map[ty][tx] === 2) { winMsg.style.display = "block"; }
 
             checkHint(); // Update from bot hint!
             draw();
