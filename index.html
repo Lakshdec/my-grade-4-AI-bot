@@ -34,8 +34,8 @@
             // 1. GAME HINT LOGIC
             if (input.toLowerCase().includes("hint") || input.toLowerCase().includes("help")) {
                 const hintText = "SECRET: Go to the very bottom right of the map!";
-                localStorage.setItem("mazeHint", hintText); // Uses the 'mazeHint' mailbox
-                log.innerHTML += `<div class="bot">BOT: 🔑 Message sent to game! Go check the game window.</div>`;
+                localStorage.setItem("mazeHint", hintText); // Writes to the shared locker
+                log.innerHTML += `<div class="bot">BOT: 🔑 Signal sent! Check your game tab now.</div>`;
                 return;
             }
 
@@ -44,6 +44,7 @@
             log.innerHTML += `<div class="bot" id="${loadingId}">[SEARCHING...]</div>`;
 
             try {
+                // origin=* is needed for browser security
                 const url = `https://en.wikipedia.org{encodeURIComponent(input)}?redirect=true&origin=*`;
                 const response = await fetch(url);
                 const data = await response.json();
