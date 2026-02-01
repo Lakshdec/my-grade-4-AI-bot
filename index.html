@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Proper AI Bot</title>
+    <title>Proper AI Bot v2.0</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0b0b1a; color: #00ffcc; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         #chat-window { width: 95%; max-width: 600px; height: 450px; background: #161625; border: 2px solid #00ffcc; border-radius: 15px; padding: 20px; overflow-y: auto; margin-bottom: 15px; box-shadow: 0 0 20px #00ffcc; }
@@ -26,9 +26,11 @@
     </div>
 
     <script>
-        // PASTE YOUR TOKEN HERE!
-        const API_TOKEN = ""; 
-        const MODEL_URL = "https://api-inference.huggingface.co";
+        // 1. PASTE YOUR TOKEN BELOW!
+        const API_TOKEN = "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"; 
+        
+        // 2. UPDATED SMART ROUTER URL
+        const MODEL_URL = "https://router.huggingface.co";
 
         async function talk() {
             const inputField = document.getElementById("userInput");
@@ -59,9 +61,13 @@
                 const data = await response.json();
                 document.getElementById(loadingId).remove();
 
+                // Check if the AI is still "Waking Up"
                 if (data.error && data.error.includes("loading")) {
-                    log.innerHTML += `<div class="msg bot">I am just waking up my brain. Give me 10 seconds and ask again!</div>`;
+                    log.innerHTML += `<div class="msg bot"><b>Bot:</b> I am just waking up my brain. Give me 10 seconds and ask again!</div>`;
+                } else if (data.error) {
+                    log.innerHTML += `<div class="msg bot"><b>Bot:</b> Connection glitch. Try again in a minute!</div>`;
                 } else {
+                    // Show real AI response
                     const reply = data.generated_text || "I'm a bit confused. Try again!";
                     log.innerHTML += `<div class="msg bot"><b>Bot:</b> ${reply}</div>`;
                 }
