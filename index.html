@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Bot & Game Master</title>
+    <title>AI Bot Command Center</title>
     <style>
         body { background: #000; color: #0f0; font-family: 'Courier New', monospace; text-align: center; padding: 20px; }
         #chat-window { width: 90%; max-width: 600px; height: 400px; border: 2px solid #0f0; margin: 20px auto; padding: 15px; overflow-y: auto; background: #111; text-align: left; border-radius: 10px; }
         input { width: 70%; padding: 12px; background: #000; border: 1px solid #0f0; color: #0f0; outline: none; font-size: 16px; }
-        button { padding: 10px 20px; background: #0f0; color: #000; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+        button { padding: 10px 20px; background: #0f0; color: #000; border: none; cursor: pointer; font-weight: bold; }
         .bot { color: #0f0; margin: 10px 0; }
         .user { color: #fff; margin: 10px 0; text-align: right; }
         a { color: gold; text-decoration: none; font-size: 1.2em; display: block; margin-top: 15px; }
@@ -15,10 +15,10 @@
 </head>
 <body>
     <h1>🤖 BOT COMMAND CENTER</h1>
-    <div id="chat-window"><p class="bot">SYSTEM ONLINE. Ask for a "hint" or any topic!</p></div>
-    <input type="text" id="userInput" placeholder="Type a topic or 'hint'..." onkeypress="if(event.key === 'Enter') askBot()">
+    <div id="chat-window"><p class="bot">SYSTEM ONLINE. Type "hint" to help your game!</p></div>
+    <input type="text" id="userInput" placeholder="Topic or 'hint'..." onkeypress="if(event.key === 'Enter') askBot()">
     <button onclick="askBot()">SEND</button>
-    <a href="game.html">🕹️ OPEN 3D MAZE</a>
+    <a href="game.html" target="_blank">🕹️ OPEN 3D GAME</a>
 
     <script>
         async function askBot() {
@@ -31,39 +31,30 @@
             inputField.value = "";
             log.scrollTop = log.scrollHeight;
 
-            // --- 1. GAME CONTROL LOGIC ---
+            // 1. SEND HINT (Uses sessionStorage to reset on close)
             if (input.toLowerCase().includes("hint") || input.toLowerCase().includes("help")) {
-                const hintText = "SECRET HINT: The Gold Wall is at the far bottom right!";
-                localStorage.setItem("mazeHint", hintText);
-                log.innerHTML += `<div class="bot">BOT: 🔑 Signal sent! Check your game tab now.</div>`;
+                const hintText = "SECRET: The Gold Wall is at the far bottom right!";
+                sessionStorage.setItem("mazeHint", hintText); 
+                log.innerHTML += `<div class="bot">BOT: 🔑 Signal sent! Check your game tab. (Resets if you close the tab)</div>`;
                 return;
             }
 
-            // --- 2. FIXED WIKI LOGIC (Bypasses the Glitch) ---
+            // 2. SEARCH WIKIPEDIA
             const loadingId = "load-" + Date.now();
-            log.innerHTML += `<div class="bot" id="${loadingId}">[SEARCHING WORLD DATABASE...]</div>`;
+            log.innerHTML += `<div class="bot" id="${loadingId}">[SEARCHING...]</div>`;
 
             try {
-                // Using the Action API with origin=* for maximum stability
                 const url = `https://en.wikipedia.org{encodeURIComponent(input)}&format=json&origin=*`;
-                
                 const response = await fetch(url);
                 const data = await response.json();
                 const pages = data.query.pages;
-                const pageId = Object.keys(pages)[0];
+                const pageId = Object.keys(pages);
                 const result = pages[pageId].extract;
-
                 document.getElementById(loadingId).remove();
-
-                if (result) {
-                    // Show only the first 2 sentences so it's readable
-                    const summary = result.split('.').slice(0, 2).join('.') + '.';
-                    log.innerHTML += `<div class="bot">BOT: ${summary}</div>`;
-                } else {
-                    log.innerHTML += `<div class="bot">BOT: I couldn't find that. Try 'Space' or 'Mark Carney'.</div>`;
-                }
+                let answer = result ? result.split('.').slice(0, 2).join('.') + '.' : "I couldn't find that.";
+                log.innerHTML += `<div class="bot">BOT: ${answer}</div>`;
             } catch (error) {
-                document.getElementById(loadingId).innerText = "ERROR: Satellite connection busy. Try again!";
+                document.getElementById(loadingId).innerText = "ERROR: Connection glitch!";
             }
             log.scrollTop = log.scrollHeight;
         }
