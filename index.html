@@ -14,9 +14,9 @@
 </head>
 <body>
 
-    <h1>🤖 UNSTOPPABLE AI v2.0</h1>
-    <div id="chat-window"><p class="bot">SYSTEM ONLINE. ASK ANYTHING.</p></div>
-    <input type="text" id="userInput" placeholder="Enter message..." onkeypress="if(event.key === 'Enter') askAI()">
+    <h1>🤖 WIKI-BRAIN AI v3.0</h1>
+    <div id="chat-window"><p class="bot">SYSTEM ONLINE. ASK ME ABOUT ANYTHING (Planets, Animals, People)...</p></div>
+    <input type="text" id="userInput" placeholder="Search the world..." onkeypress="if(event.key === 'Enter') askAI()">
     <button onclick="askAI()">SEND</button>
 
     <script>
@@ -28,25 +28,27 @@
             log.innerHTML += `<div class="user">You: ${input}</div>`;
             document.getElementById("userInput").value = "";
             const loadingId = "load-" + Date.now();
-            log.innerHTML += `<div class="bot" id="${loadingId}">[THINKING...]</div>`;
+            log.innerHTML += `<div class="bot" id="${loadingId}">[SEARCHING SATELLITES...]</div>`;
             log.scrollTop = log.scrollHeight;
 
             try {
-                // Using a more reliable "Public Brain"
-                const response = await fetch(`https://api.duckduckgo.com{encodeURIComponent(input)}&format=json`);
+                // This connects to Wikipedia's brain which is very stable
+                const url = `https://en.wikipedia.org{encodeURIComponent(input)}`;
+                const response = await fetch(url);
                 const data = await response.json();
                 
                 document.getElementById(loadingId).remove();
                 
-                // If DuckDuckGo knows the answer, it tells us. If not, we use a smart fallback.
-                let answer = data.AbstractText;
-                if (!answer || answer === "") {
-                    answer = "I am searching my memory... Try asking 'Who is Mark Carney' or 'What is Jupiter'.";
+                let answer = "";
+                if (data.extract) {
+                    answer = data.extract;
+                } else {
+                    answer = "I couldn't find that in my main files. Try asking for something like 'Jupiter', 'Lego', or 'Python'.";
                 }
 
                 log.innerHTML += `<div class="bot">BOT: ${answer}</div>`;
             } catch (error) {
-                document.getElementById(loadingId).innerText = "ERROR: REBOOTING BRAIN. TRY AGAIN.";
+                document.getElementById(loadingId).innerText = "ERROR: Connection glitch. Try a different topic!";
             }
             log.scrollTop = log.scrollHeight;
         }
