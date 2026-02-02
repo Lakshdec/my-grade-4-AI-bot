@@ -1,76 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Satellite Fact Bot</title>
-    <style>
-        /* The "Hacker" Look */
-        body { background: #0b0b1a; color: #00ffcc; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; height: 100vh; }
-        #chat-window { width: 95%; max-width: 750px; height: 65vh; background: #161625; border: 2px solid #00ffcc; border-radius: 15px; padding: 20px; overflow-y: auto; margin-top: 20px; box-shadow: 0 0 20px rgba(0, 255, 204, 0.2); }
-        .msg { margin: 15px 0; padding: 15px; border-radius: 12px; line-height: 1.5; font-size: 17px; max-width: 85%; }
-        .user { background: #007bff; color: white; margin-left: auto; text-align: right; }
-        .bot { background: #2c2c3e; color: #ffffff; border-left: 4px solid #00ffcc; }
-        .input-area { display: flex; width: 95%; max-width: 750px; gap: 10px; margin-top: 20px; }
-        input { flex: 1; padding: 15px; border-radius: 10px; border: 1px solid #00ffcc; background: #1f1f2e; color: #00ffcc; outline: none; font-size: 16px; }
-        button { padding: 15px 25px; border-radius: 10px; border: none; background: #00ffcc; color: #0b0b1a; cursor: pointer; font-weight: bold; }
-        button:hover { background: #ffffff; }
-        .game-link { margin-top: 25px; color: gold; text-decoration: none; font-weight: bold; font-size: 1.1em; border: 1px solid gold; padding: 10px 20px; border-radius: 10px; transition: 0.3s; }
-        .game-link:hover { background: gold; color: black; }
-    </style>
-</head>
-<body>
+async function askBot() {
+    const inputField = document.getElementById("userInput");
+    const log = document.getElementById("chat-window");
+    const input = inputField.value.trim();
+    if (!input) return;
 
-    <h2 style="letter-spacing: 2px; margin-top: 30px;">🛰️ SATELLITE DATA CORE</h2>
+    log.innerHTML += `<div class="msg user">${input}</div>`;
+    inputField.value = "";
     
-    <div id="chat-window">
-        <div class="msg bot">System Initialized. I am linked to the Global Knowledge Database. Search for any person, place, or thing.</div>
-    </div>
-    
-    <div class="input-area">
-        <input type="text" id="userInput" placeholder="Search a topic..." onkeypress="if(event.key === 'Enter') askBot()">
-        <button onclick="askBot()">RETRIEVE</button>
-    </div>
+    const loadingId = "load-" + Date.now();
+    log.innerHTML += `<div class="msg bot" id="${loadingId}">[📡 Accessing Satellite...]</div>`;
 
-    <!-- This is the ONLY game thing in the bot - a simple button -->
-    <a href="game.html" class="game-link">🕹️ SWITCH TO 3D GAME</a>
+    try {
+        // We use a different URL format that is harder for Wi-Fi filters to block
+        const url = `https://en.wikipedia.org{encodeURIComponent(input)}?redirect=true&origin=*`;
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) throw new Error("Satellite offline");
 
-    <script>
-        async function askBot() {
-            const inputField = document.getElementById("userInput");
-            const log = document.getElementById("chat-window");
-            const input = inputField.value.trim();
-            if (!input) return;
+        const data = await response.json();
+        document.getElementById(loadingId).remove();
 
-            log.innerHTML += `<div class="msg user">${input}</div>`;
-            inputField.value = "";
-            log.scrollTop = log.scrollHeight;
-
-            const loadingId = "load-" + Date.now();
-            log.innerHTML += `<div class="msg bot" id="${loadingId}">[Accessing Satellite...]</div>`;
-            log.scrollTop = log.scrollHeight;
-
-            try {
-                // Proper Wikipedia API link
-                const url = `https://en.wikipedia.org{encodeURIComponent(input)}&format=json&origin=*`;
-                const response = await fetch(url);
-                const data = await response.json();
-                const pages = data.query.pages;
-                const pageId = Object.keys(pages);
-                const extract = pages[pageId].extract;
-
-                document.getElementById(loadingId).remove();
-
-                if (extract) {
-                    const summary = extract.split('.').slice(0, 3).join('.') + '.';
-                    log.innerHTML += `<div class="msg bot"><b>Data Result:</b> ${summary}</div>`;
-                } else {
-                    log.innerHTML += `<div class="msg bot">No data found for "${input}".</div>`;
-                }
-            } catch (error) {
-                document.getElementById(loadingId).innerText = "ERROR: Satellite Glitch!";
-            }
-            log.scrollTop = log.scrollHeight;
+        if (data.extract) {
+            log.innerHTML += `<div class="msg bot"><b>RESULT:</b> ${data.extract}</div>`;
+        } else {
+            log.innerHTML += `<div class="msg bot">No data found for "${input}".</div>`;
         }
-    </script>
-</body>
-</html>
+    } catch (error) {
+        // This is the error catch! 
+        // Without this, the "Thinking..." message would stay forever and the bot would freeze.
+        document.getElementById(loadingId).innerText = "❌ CONNECTION BLOCKED: Your Wi-Fi might be blocking Wikipedia!";
+    }
+    log.scrollTop = log.scrollHeight;
+}
