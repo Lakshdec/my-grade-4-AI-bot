@@ -2,115 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Satellite Assistant</title>
+    <title>Satellite Fact Bot</title>
     <style>
-        body { 
-            background: #0b0b1a; 
-            color: #00ffcc; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 20px;
-            margin: 0;
-            height: 100vh;
-        }
-        #chat-window { 
-            width: 95%; 
-            max-width: 800px; 
-            height: 60vh; 
-            background: #161625; 
-            border: 2px solid #00ffcc; 
-            border-radius: 15px; 
-            padding: 20px; 
-            overflow-y: auto; 
-            margin-top: 20px;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
-        }
-        .msg { margin: 15px 0; padding: 15px; border-radius: 12px; line-height: 1.5; font-size: 16px; max-width: 85%; }
-        .user { background: #007bff; color: white; margin-left: auto; text-align: right; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        /* The "Hacker" Look */
+        body { background: #0b0b1a; color: #00ffcc; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; height: 100vh; }
+        #chat-window { width: 95%; max-width: 750px; height: 65vh; background: #161625; border: 2px solid #00ffcc; border-radius: 15px; padding: 20px; overflow-y: auto; margin-top: 20px; box-shadow: 0 0 20px rgba(0, 255, 204, 0.2); }
+        .msg { margin: 15px 0; padding: 15px; border-radius: 12px; line-height: 1.5; font-size: 17px; max-width: 85%; }
+        .user { background: #007bff; color: white; margin-left: auto; text-align: right; }
         .bot { background: #2c2c3e; color: #ffffff; border-left: 4px solid #00ffcc; }
-        
-        .input-area { 
-            display: flex; 
-            width: 95%; 
-            max-width: 800px; 
-            gap: 10px; 
-            margin-top: 20px; 
-        }
-        input { 
-            flex: 1; padding: 15px; border-radius: 10px; border: 1px solid #00ffcc; 
-            background: #1f1f2e; color: #00ffcc; outline: none; font-size: 16px;
-        }
-        button { 
-            padding: 15px 25px; border-radius: 10px; border: none; 
-            background: #00ffcc; color: #0b0b1a; cursor: pointer; 
-            font-weight: bold; transition: 0.2s;
-        }
-        button:hover { background: #ffffff; transform: translateY(-2px); }
-        
-        .nav-links { margin-top: 20px; }
-        .nav-links a { color: #ffd700; text-decoration: none; font-weight: bold; border-bottom: 1px solid #ffd700; padding-bottom: 2px; }
+        .input-area { display: flex; width: 95%; max-width: 750px; gap: 10px; margin-top: 20px; }
+        input { flex: 1; padding: 15px; border-radius: 10px; border: 1px solid #00ffcc; background: #1f1f2e; color: #00ffcc; outline: none; font-size: 16px; }
+        button { padding: 15px 25px; border-radius: 10px; border: none; background: #00ffcc; color: #0b0b1a; cursor: pointer; font-weight: bold; }
+        button:hover { background: #ffffff; }
+        .game-link { margin-top: 25px; color: gold; text-decoration: none; font-weight: bold; font-size: 1.1em; border: 1px solid gold; padding: 10px 20px; border-radius: 10px; transition: 0.3s; }
+        .game-link:hover { background: gold; color: black; }
     </style>
 </head>
 <body>
 
-    <h2 style="letter-spacing: 2px;">🛰️ SATELLITE DATA CORE</h2>
+    <h2 style="letter-spacing: 2px; margin-top: 30px;">🛰️ SATELLITE DATA CORE</h2>
     
     <div id="chat-window">
-        <div class="msg bot">System Initialized. I am linked to the Global Knowledge Database. Enter any topic to retrieve data.</div>
+        <div class="msg bot">System Initialized. I am linked to the Global Knowledge Database. Search for any person, place, or thing.</div>
     </div>
     
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="Search a topic (e.g. Jupiter, Lions, Lego)..." onkeypress="if(event.key === 'Enter') askBot()">
+        <input type="text" id="userInput" placeholder="Search a topic..." onkeypress="if(event.key === 'Enter') askBot()">
         <button onclick="askBot()">RETRIEVE</button>
     </div>
 
-    <div class="nav-links">
-        <a href="game.html">🎮 SWITCH TO 3D GAME</a>
-    </div>
+    <!-- This is the ONLY game thing in the bot - a simple button -->
+    <a href="game.html" class="game-link">🕹️ SWITCH TO 3D GAME</a>
 
     <script>
         async function askBot() {
             const inputField = document.getElementById("userInput");
             const log = document.getElementById("chat-window");
             const input = inputField.value.trim();
-            
             if (!input) return;
 
-            // 1. Display User Message
             log.innerHTML += `<div class="msg user">${input}</div>`;
             inputField.value = "";
             log.scrollTop = log.scrollHeight;
 
-            // 2. Display Loading State
             const loadingId = "load-" + Date.now();
-            log.innerHTML += `<div class="msg bot" id="${loadingId}">[Accessing Wikipedia Satellite...]</div>`;
+            log.innerHTML += `<div class="msg bot" id="${loadingId}">[Accessing Satellite...]</div>`;
             log.scrollTop = log.scrollHeight;
 
             try {
-                // 3. The Professional Wikipedia Action API Call
+                // Proper Wikipedia API link
                 const url = `https://en.wikipedia.org{encodeURIComponent(input)}&format=json&origin=*`;
-                
                 const response = await fetch(url);
                 const data = await response.json();
-                
                 const pages = data.query.pages;
-                const pageId = Object.keys(pages)[0];
+                const pageId = Object.keys(pages);
                 const extract = pages[pageId].extract;
 
                 document.getElementById(loadingId).remove();
 
                 if (extract) {
-                    // We only take the first 3 sentences to keep it clean
                     const summary = extract.split('.').slice(0, 3).join('.') + '.';
-                    log.innerHTML += `<div class="msg bot"><b>Data Found:</b> ${summary}</div>`;
+                    log.innerHTML += `<div class="msg bot"><b>Data Result:</b> ${summary}</div>`;
                 } else {
-                    log.innerHTML += `<div class="msg bot">No records found for "${input}". Please check your spelling or try a more general term.</div>`;
+                    log.innerHTML += `<div class="msg bot">No data found for "${input}".</div>`;
                 }
             } catch (error) {
-                document.getElementById(loadingId).innerText = "ERROR: Could not establish a connection to the data satellite.";
+                document.getElementById(loadingId).innerText = "ERROR: Satellite Glitch!";
             }
             log.scrollTop = log.scrollHeight;
         }
