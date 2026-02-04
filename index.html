@@ -27,7 +27,7 @@
     <div id="status" style="font-size: 12px; opacity: 0.7;">SATELLITE TIME: <span id="clock">--:--:--</span></div>
     
     <div id="chat-window">
-        <div class="msg bot" id="welcome-msg">[LINK ESTABLISHED] Welcome back. What shall we investigate today?</div>
+        <div class="msg bot" id="welcome-msg">[LINK ESTABLISHED] Connection secure. What shall we investigate today?</div>
     </div>
     
     <div class="input-area">
@@ -41,7 +41,7 @@
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
         }, 1000);
 
-        // 2. SPEECH FUNCTION (Voice Mode)
+        // 2. SPEECH FUNCTION
         function speak(text) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = 1.1;
@@ -60,20 +60,22 @@
             log.scrollTop = log.scrollHeight;
 
             const loadingId = "load-" + Date.now();
-            log.innerHTML += `<div class="msg bot" id="${loadingId}">[Querying...]</div>`;
+            log.innerHTML += `<div class="msg bot" id="${loadingId}">[📡 Querying Archives...]</div>`;
 
             try {
-                // Official Wikipedia Action API
+                // FIXED URL: Included origin=* to stop CONNECTION ERROR
                 const url = `https://en.wikipedia.org{encodeURIComponent(input)}&format=json&origin=*`;
+                
                 const response = await fetch(url);
                 const data = await response.json();
+                
                 const pages = data.query.pages;
-                const pageId = Object.keys(pages);
+                const pageId = Object.keys(pages)[0];
                 const extract = pages[pageId].extract;
 
                 document.getElementById(loadingId).remove();
 
-                if (extract) {
+                if (extract && extract.trim() !== "") {
                     const summary = extract.split('.').slice(0, 2).join('.') + '.';
                     const botMsgId = "bot-" + Date.now();
                     log.innerHTML += `
@@ -82,10 +84,10 @@
                             <button class="speaker-btn" onclick="speak('${summary.replace(/'/g, "\\'")}')">🔊 READ ALOUD</button>
                         </div>`;
                 } else {
-                    log.innerHTML += `<div class="msg bot">Entry not found. Try a different query.</div>`;
+                    log.innerHTML += `<div class="msg bot">Database entry for "${input}" is empty or not found. Try a broader term.</div>`;
                 }
             } catch (e) {
-                document.getElementById(loadingId).innerText = "CONNECTION ERROR.";
+                document.getElementById(loadingId).innerText = "CONNECTION ERROR: Neural link unstable. Check origin settings.";
             }
             log.scrollTop = log.scrollHeight;
         }
