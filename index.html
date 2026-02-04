@@ -2,53 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Neural Assistant v6.0</title>
+    <title>Satellite Fact Bot</title>
     <style>
         body { background: #050510; color: #00f2ff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; height: 100vh; }
-        #chat-window { 
-            width: 95%; max-width: 800px; height: 65vh; 
-            background: rgba(16, 16, 32, 0.9); 
-            border: 1px solid #00f2ff; border-radius: 10px; 
-            padding: 20px; overflow-y: auto; margin-top: 20px;
-            box-shadow: 0 0 25px rgba(0, 242, 255, 0.2);
-        }
-        .msg { margin: 15px 0; padding: 15px; border-radius: 8px; line-height: 1.6; font-size: 17px; max-width: 80%; }
+        #chat-window { width: 95%; max-width: 750px; height: 65vh; background: #161625; border: 2px solid #00f2ff; border-radius: 15px; padding: 20px; overflow-y: auto; margin-top: 20px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
+        .msg { margin: 15px 0; padding: 15px; border-radius: 12px; line-height: 1.5; font-size: 17px; max-width: 85%; }
         .user { background: #0044ff; color: white; margin-left: auto; text-align: right; }
         .bot { background: #1a1a2e; color: #00f2ff; border-left: 3px solid #00f2ff; }
-        .input-area { display: flex; width: 95%; max-width: 800px; gap: 10px; margin-top: 20px; }
-        input { flex: 1; padding: 15px; border-radius: 5px; border: 1px solid #00f2ff; background: #0a0a1a; color: #00f2ff; outline: none; font-size: 16px; }
-        button { padding: 15px 25px; background: #00f2ff; color: #050510; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
-        .speaker-btn { background: none; border: 1px solid #00f2ff; color: #00f2ff; padding: 5px 10px; font-size: 12px; margin-top: 5px; cursor: pointer; border-radius: 4px; }
+        .input-area { display: flex; width: 95%; max-width: 750px; gap: 10px; margin-top: 20px; }
+        input { flex: 1; padding: 15px; border-radius: 10px; border: 1px solid #00f2ff; background: #0a0a1a; color: #00f2ff; outline: none; font-size: 16px; }
+        button { padding: 15px 25px; border-radius: 10px; border: none; background: #00f2ff; color: #050510; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <h2 style="letter-spacing: 4px; text-shadow: 0 0 10px #00f2ff;">NEURAL INTERFACE v6.0</h2>
-    <div id="status" style="font-size: 12px; opacity: 0.7;">SATELLITE TIME: <span id="clock">--:--:--</span></div>
-    
-    <div id="chat-window">
-        <div class="msg bot" id="welcome-msg">[LINK ESTABLISHED] Connection secure. What shall we investigate today?</div>
-    </div>
-    
+    <h2>🛰️ SATELLITE DATA CORE</h2>
+    <div id="chat-window"><div class="msg bot">LINK SECURE. Search any topic...</div></div>
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="Ask anything..." onkeypress="if(event.key === 'Enter') askBot()">
-        <button onclick="askBot()">QUERY</button>
+        <input type="text" id="userInput" placeholder="Type a topic..." onkeypress="if(event.key === 'Enter') askBot()">
+        <button onclick="askBot()">RETRIEVE</button>
     </div>
 
     <script>
-        // 1. UPDATE CLOCK
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-        }, 1000);
-
-        // 2. SPEECH FUNCTION
-        function speak(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 1.1;
-            utterance.pitch = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
-
         async function askBot() {
             const inputField = document.getElementById("userInput");
             const log = document.getElementById("chat-window");
@@ -60,11 +34,20 @@
             log.scrollTop = log.scrollHeight;
 
             const loadingId = "load-" + Date.now();
-            log.innerHTML += `<div class="msg bot" id="${loadingId}">[📡 Querying Archives...]</div>`;
+            log.innerHTML += `<div class="msg bot" id="${loadingId}">[📡 ACCESSING WIKIPEDIA...]</div>`;
 
             try {
-                // FIXED URL: Included origin=* to stop CONNECTION ERROR
-                const url = `https://en.wikipedia.org{encodeURIComponent(input)}&format=json&origin=*`;
+                // NEW FORMAT: This uses the most stable Wikipedia API link
+                const url = "https://en.wikipedia.org?" + 
+                    new URLSearchParams({
+                        action: "query",
+                        prop: "extracts",
+                        exintro: "",
+                        explaintext: "",
+                        titles: input,
+                        format: "json",
+                        origin: "*" // The "Origin" trick
+                    });
                 
                 const response = await fetch(url);
                 const data = await response.json();
@@ -75,19 +58,14 @@
 
                 document.getElementById(loadingId).remove();
 
-                if (extract && extract.trim() !== "") {
-                    const summary = extract.split('.').slice(0, 2).join('.') + '.';
-                    const botMsgId = "bot-" + Date.now();
-                    log.innerHTML += `
-                        <div class="msg bot" id="${botMsgId}">
-                            <b>Result:</b> ${summary}<br>
-                            <button class="speaker-btn" onclick="speak('${summary.replace(/'/g, "\\'")}')">🔊 READ ALOUD</button>
-                        </div>`;
+                if (extract) {
+                    const summary = extract.split('.').slice(0, 3).join('.') + '.';
+                    log.innerHTML += `<div class="msg bot"><b>RESULT:</b> ${summary}</div>`;
                 } else {
-                    log.innerHTML += `<div class="msg bot">Database entry for "${input}" is empty or not found. Try a broader term.</div>`;
+                    log.innerHTML += `<div class="msg bot">No records found for "${input}".</div>`;
                 }
-            } catch (e) {
-                document.getElementById(loadingId).innerText = "CONNECTION ERROR: Neural link unstable. Check origin settings.";
+            } catch (error) {
+                document.getElementById(loadingId).innerText = "❌ ERROR: Satellite signal blocked by Wi-Fi or Browser.";
             }
             log.scrollTop = log.scrollHeight;
         }
