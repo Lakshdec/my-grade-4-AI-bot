@@ -1,75 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Satellite Data Core</title>
-    <style>
-        body { background: #050510; color: #00f2ff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; height: 100vh; margin: 0; }
-        #chat-window { width: 95%; max-width: 750px; height: 65vh; background: #161625; border: 2px solid #00f2ff; border-radius: 15px; padding: 20px; overflow-y: auto; margin-top: 20px; box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
-        .msg { margin: 15px 0; padding: 15px; border-radius: 12px; font-size: 17px; max-width: 85%; }
-        .user { background: #0044ff; color: white; margin-left: auto; text-align: right; }
-        .bot { background: #1a1a2e; color: #00f2ff; border-left: 3px solid #00f2ff; }
-        .input-area { display: flex; width: 95%; max-width: 750px; gap: 10px; margin-top: 20px; }
-        input { flex: 1; padding: 15px; border-radius: 10px; border: 1px solid #00f2ff; background: #0a0a1a; color: #00f2ff; outline: none; font-size: 16px; }
-        button { padding: 15px 25px; border-radius: 10px; border: none; background: #00ffcc; color: #050510; cursor: pointer; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <h2>🛰️ SATELLITE DATA CORE</h2>
-    <div id="chat-window"><div class="msg bot">SYSTEM ONLINE. Search a topic (e.g. Earth)...</div></div>
-    <div class="input-area">
-        <input type="text" id="userInput" placeholder="Topic..." onkeypress="if(event.key==='Enter') askBot()">
-        <button onclick="askBot()">RETRIEVE</button>
-    </div>
+async function askBot() {
+    const inputField = document.getElementById("userInput");
+    const log = document.getElementById("chat-window");
+    const input = inputField.value.trim();
+    if (!input) return;
 
-    <script>
-        async function askBot() {
-            const inputField = document.getElementById("userInput");
-            const log = document.getElementById("chat-window");
-            const input = inputField.value.trim();
-            if (!input) return;
+    log.innerHTML += `<div class="msg user">${input}</div>`;
+    inputField.value = "";
+    
+    const loadingId = "load-" + Date.now();
+    log.innerHTML += `<div class="msg bot" id="${loadingId}">[📡 PROXY LINK ESTABLISHED...]</div>`;
+    log.scrollTop = log.scrollHeight;
 
-            log.innerHTML += `<div class="msg user">${input}</div>`;
-            inputField.value = "";
-            
-            const loadingId = "load-" + Date.now();
-            log.innerHTML += `<div class="msg bot" id="${loadingId}">[📡 SCANNING...]</div>`;
-            log.scrollTop = log.scrollHeight;
+    try {
+        // This Proxy "hides" the request from your Wi-Fi filter
+        const proxyUrl = "https://api.allorigins.win";
+        const wikiUrl = `https://en.wikipedia.org{encodeURIComponent(input)}`;
+        
+        const response = await fetch(proxyUrl + encodeURIComponent(wikiUrl));
+        const json = await response.json();
+        const data = JSON.parse(json.contents); // Proxies wrap the data in a 'contents' string
+        
+        const pages = data.query.pages;
+        const pageId = Object.keys(pages)[0];
+        const extract = pages[pageId].extract;
 
-            try {
-                // Official API parameters
-                const params = new URLSearchParams({
-                    action: "query",
-                    format: "json",
-                    prop: "extracts",
-                    exintro: true,
-                    explaintext: true,
-                    titles: input,
-                    origin: "*"
-                });
+        document.getElementById(loadingId).remove();
 
-                const url = `https://en.wikipedia.org{params.toString()}`;
-                
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                const pages = data.query.pages;
-                const pageId = Object.keys(pages)[0];
-                const extract = pages[pageId].extract;
-
-                document.getElementById(loadingId).remove();
-
-                if (extract) {
-                    const shortText = extract.split('.').slice(0, 3).join('.') + '.';
-                    log.innerHTML += `<div class="msg bot"><b>RESULT:</b> ${shortText}</div>`;
-                } else {
-                    log.innerHTML += `<div class="msg bot">No records found for "${input}".</div>`;
-                }
-            } catch (error) {
-                document.getElementById(loadingId).innerText = "❌ ERROR: Satellite link blocked.";
-            }
-            log.scrollTop = log.scrollHeight;
+        if (extract) {
+            const shortText = extract.split('.').slice(0, 3).join('.') + '.';
+            log.innerHTML += `<div class="msg bot"><b>RESULT:</b> ${shortText}</div>`;
+        } else {
+            log.innerHTML += `<div class="msg bot">No records found for "${input}".</div>`;
         }
-    </script>
-</body>
-</html>
+    } catch (error) {
+        document.getElementById(loadingId).innerText = "❌ CRITICAL ERROR: All Satellite links blocked by Network.";
+    }
+    log.scrollTop = log.scrollHeight;
+}
