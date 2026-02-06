@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Maze: Shifting Walls</title>
     <style>
         body { margin: 0; background: #000; color: #0f0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
@@ -10,7 +9,7 @@
         #crosshair { position: absolute; top: 50%; left: 50%; width: 15px; height: 15px; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 5; }
         #win-screen { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; background: rgba(0,0,0,0.95); padding: 40px; border: 5px solid gold; border-radius: 30px; z-index: 100; }
         #click-to-start { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; cursor: pointer; color: white; }
-        .lvl-btn { background: #0f0; border: none; padding: 15px 30px; font-weight: bold; cursor: pointer; border-radius: 10px; margin-top: 20px; font-size: 1.2em; }
+        .lvl-btn { background: #0f0; border: none; padding: 15px 30px; font-weight: bold; cursor: pointer; border-radius: 10px; margin-top: 20px; font-size: 1.2em; color: black; }
     </style>
 </head>
 <body>
@@ -43,30 +42,34 @@
         canvas.height = window.innerHeight;
 
         const levels = [
-            [ // Level 1 (Classic)
-               [1,1,1,1,1,1,1,1],
-               [1,0,0,0,0,0,0,1],
-               [1,0,1,1,0,1,0,1],
-               [1,0,1,0,0,1,0,1],
-               [1,0,0,0,1,1,0,1],
-               [1,1,1,0,0,0,2,1],
-               [1,1,1,1,1,1,1,1]
+            [ // Level 1 (The Original)
+                [1,1,1,1,1,1,1,1],
+                [1,0,0,0,0,0,0,1],
+                [1,0,1,1,1,1,0,1],
+                [1,0,1,0,0,0,0,1],
+                [1,0,1,0,1,1,1,1],
+                [1,0,0,0,0,0,2,1],
+                [1,1,1,1,1,1,1,1]
             ],
-            [ // Level 2 (Easier - Wide Halls)
-               [1,1,1,1,1,1],
-               [1,0,0,0,0,1],
-               [1,0,0,0,0,1],
-               [1,0,0,0,2,1],
-               [1,1,1,1,1,1]
+            [ // Level 2 (REALLY EASY - WIDE OPEN)
+                [1,1,1,1,1,1,1,1],
+                [1,0,0,0,0,0,0,1],
+                [1,0,0,0,0,0,0,1],
+                [1,0,0,1,1,0,0,1],
+                [1,0,0,1,1,0,0,1],
+                [1,0,0,0,0,0,2,1],
+                [1,1,1,1,1,1,1,1]
             ],
-            [ // Level 3 (SHIFTING - Initial State)
-               [1,1,1,1,1,1,1,1,1,1],
-               [1,0,0,0,0,0,0,0,0,1],
-               [1,0,1,0,1,0,1,0,0,1],
-               [1,0,0,1,0,1,0,0,0,1],
-               [1,0,1,0,1,0,1,0,0,1],
-               [1,0,0,0,0,0,0,0,2,1],
-               [1,1,1,1,1,1,1,1,1,1]
+            [ // Level 3 (SHIFTING MAZE)
+                [1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,0,0,0,0,1],
+                [1,0,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,1],
+                [1,0,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,1],
+                [1,0,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,0,2,1],
+                [1,1,1,1,1,1,1,1,1]
             ]
         ];
 
@@ -77,28 +80,25 @@
         let keys = {};
         let gameActive = false;
 
-        // --- LEVEL 3 SHIFTING LOGIC ---
         function shiftWalls() {
             if (currentLevelIndex === 2) {
                 wallStatus.innerText = "SHIFTING...";
                 wallStatus.style.color = "red";
-                
-                // Randomize internal walls (not player start or goal)
-                for (let y = 2; y < map.length - 2; y++) {
-                    for (let x = 2; x < map[y].length - 2; x++) {
-                        if (map[y][x] !== 2) {
-                            map[y][x] = Math.random() > 0.7 ? 1 : 0;
+                // Only randomize the middle parts of Level 3
+                for (let y = 1; y < map.length - 1; y++) {
+                    for (let x = 1; x < map[y].length - 1; x++) {
+                        if (map[y][x] !== 2 && !(y === 1 && x === 1)) {
+                            map[y][x] = Math.random() > 0.8 ? 1 : 0;
                         }
                     }
                 }
-                
                 setTimeout(() => {
                     wallStatus.innerText = "STABLE";
                     wallStatus.style.color = "white";
                 }, 2000);
             }
         }
-        setInterval(shiftWalls, 60000); // 1 minute
+        setInterval(shiftWalls, 60000); // 1 Minute Timer
 
         startScreen.onclick = () => { canvas.requestPointerLock(); };
         document.addEventListener("pointerlockchange", () => {
@@ -113,10 +113,11 @@
         function loop() {
             if(gameActive) {
                 let nx = player.x, ny = player.y;
-                if(keys['w']) { nx += Math.cos(player.angle)*3.5; ny += Math.sin(player.angle)*3.5; }
-                if(keys['s']) { nx -= Math.cos(player.angle)*3.5; ny -= Math.sin(player.angle)*3.5; }
-                if(keys['a']) { nx += Math.sin(player.angle)*3.5; ny -= Math.cos(player.angle)*3.5; }
-                if(keys['d']) { nx -= Math.sin(player.angle)*3.5; ny += Math.cos(player.angle)*3.5; }
+                let moveSpeed = 3.5;
+                if(keys['w']) { nx += Math.cos(player.angle)*moveSpeed; ny += Math.sin(player.angle)*moveSpeed; }
+                if(keys['s']) { nx -= Math.cos(player.angle)*moveSpeed; ny -= Math.sin(player.angle)*ms; }
+                if(keys['a']) { nx += Math.sin(player.angle)*moveSpeed; ny -= Math.cos(player.angle)*moveSpeed; }
+                if(keys['d']) { nx -= Math.sin(player.angle)*moveSpeed; ny += Math.cos(player.angle)*moveSpeed; }
                 
                 let tx = Math.floor(nx/tileSize), ty = Math.floor(ny/tileSize);
                 if(map[ty] && map[ty][tx] === 0) { player.x = nx; player.y = ny; }
@@ -157,7 +158,7 @@
                 winScreen.style.display = "none";
                 canvas.requestPointerLock();
             } else {
-                alert("MAZE MASTER!");
+                alert("CONGRATS! YOU BEAT THE SHIFTING MAZE!");
                 location.reload();
             }
         };
