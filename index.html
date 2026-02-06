@@ -2,47 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D Maze: Pro Levels</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Maze: Shifting Walls</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; touch-action: none; }
-        #start-screen, #win-screen { 
-            position: absolute; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 100; 
-            cursor: pointer; color: white; text-align: center;
-        }
-        #win-screen { display: none; background: rgba(0,255,150,0.2); backdrop-filter: blur(10px); }
-        canvas { display: block; }
-        #ui { position: absolute; top: 15px; left: 15px; color: #0f0; z-index: 50; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px; border: 1px solid #0f0; pointer-events: none; }
-        #controls { position: absolute; bottom: 20px; left: 20px; display: none; grid-template-columns: repeat(3, 60px); gap: 10px; z-index: 50; }
-        .btn { width: 60px; height: 60px; background: rgba(255,255,255,0.2); border: 2px solid #0f0; color: #0f0; display: flex; justify-content: center; align-items: center; border-radius: 10px; font-weight: bold; user-select: none; }
-        @media (pointer: coarse) { #controls { display: grid; } }
-        button { background: #0f0; color: #000; border: none; padding: 15px 30px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 18px; margin-top: 20px; }
+        body { margin: 0; background: #000; color: #0f0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        #ui { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 2px solid #0f0; pointer-events: none; z-index: 10; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 15px; height: 15px; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 5; }
+        #win-screen { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; background: rgba(0,0,0,0.95); padding: 40px; border: 5px solid gold; border-radius: 30px; z-index: 100; }
+        #click-to-start { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; cursor: pointer; color: white; }
+        .lvl-btn { background: #0f0; border: none; padding: 15px 30px; font-weight: bold; cursor: pointer; border-radius: 10px; margin-top: 20px; font-size: 1.2em; }
     </style>
 </head>
 <body>
 
-    <div id="start-screen">
-        <h1>🎮 START GAME</h1>
-        <p>Find the <span style="color:gold">GOLD</span> to advance!</p>
-        <button onclick="startGame()">ENTER MAZE</button>
+    <div id="click-to-start"><h1>🖱️ CLICK TO START</h1><p>WASD to Move | Mouse to Look</p></div>
+
+    <div id="ui">
+        <b>🕹️ LEVEL: <span id="lvl-num">1</span></b><br>
+        STATUS: <span id="wall-status" style="color:white;">STABLE</span>
     </div>
+
+    <div id="crosshair"></div>
 
     <div id="win-screen">
         <h1 style="color:gold;">🏆 LEVEL COMPLETE!</h1>
-        <p id="next-lvl-text">Ready for the next challenge?</p>
-        <button onclick="nextLevel()">NEXT LEVEL</button>
-    </div>
-
-    <div id="ui">
-        <b>🕹️ LEVEL: <span id="lvl-display">1</span></b><br>
-        W,A,S,D to Walk | Mouse to Look
-    </div>
-
-    <div id="controls">
-        <div></div><div class="btn" id="up">W</div><div></div>
-        <div class="btn" id="left">A</div><div class="btn" id="down">S</div><div class="btn" id="right">D</div>
+        <button class="lvl-btn" id="next-lvl-btn">NEXT LEVEL</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -50,111 +34,96 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const startScreen = document.getElementById("start-screen");
         const winScreen = document.getElementById("win-screen");
-        const lvlText = document.getElementById("lvl-display");
+        const startScreen = document.getElementById("click-to-start");
+        const nextBtn = document.getElementById("next-lvl-btn");
+        const wallStatus = document.getElementById("wall-status");
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // --- THE LEVEL DATA (0=Floor, 1=Wall, 2=Gold) ---
-        const allLevels = [
-            [ // Level 1: Simple Square
-                [1,1,1,1,1,1,1,1],
-                [1,0,0,0,0,0,0,1],
-                [1,0,1,1,1,1,0,1],
-                [1,0,1,2,0,1,0,1],
-                [1,0,1,1,0,1,0,1],
-                [1,0,0,0,0,0,0,1],
-                [1,1,1,1,1,1,1,1]
+        const levels = [
+            [ // Level 1 (Classic)
+               [1,1,1,1,1,1,1,1],
+               [1,0,0,0,0,0,0,1],
+               [1,0,1,1,0,1,0,1],
+               [1,0,1,0,0,1,0,1],
+               [1,0,0,0,1,1,0,1],
+               [1,1,1,0,0,0,2,1],
+               [1,1,1,1,1,1,1,1]
             ],
-            [ // Level 2: The S-Curve
-                [1,1,1,1,1,1,1,1],
-                [1,0,0,0,1,0,0,1],
-                [1,1,1,0,1,0,1,1],
-                [1,0,0,0,1,0,0,1],
-                [1,0,1,1,1,1,0,1],
-                [1,0,0,0,0,1,2,1],
-                [1,1,1,1,1,1,1,1]
+            [ // Level 2 (Easier - Wide Halls)
+               [1,1,1,1,1,1],
+               [1,0,0,0,0,1],
+               [1,0,0,0,0,1],
+               [1,0,0,0,2,1],
+               [1,1,1,1,1,1]
             ],
-            [ // Level 3: The Spiral
-                [1,1,1,1,1,1,1,1,1,1],
-                [1,0,0,0,0,0,0,0,0,1],
-                [1,0,1,1,1,1,1,1,0,1],
-                [1,0,1,0,0,0,0,1,0,1],
-                [1,0,1,0,1,1,0,1,0,1],
-                [1,0,1,0,1,2,0,1,0,1],
-                [1,0,1,0,1,1,1,1,0,1],
-                [1,0,1,0,0,0,0,0,0,1],
-                [1,0,1,1,1,1,1,1,1,1],
-                [1,0,0,0,0,0,0,0,0,1],
-                [1,1,1,1,1,1,1,1,1,1]
+            [ // Level 3 (SHIFTING - Initial State)
+               [1,1,1,1,1,1,1,1,1,1],
+               [1,0,0,0,0,0,0,0,0,1],
+               [1,0,1,0,1,0,1,0,0,1],
+               [1,0,0,1,0,1,0,0,0,1],
+               [1,0,1,0,1,0,1,0,0,1],
+               [1,0,0,0,0,0,0,0,2,1],
+               [1,1,1,1,1,1,1,1,1,1]
             ]
         ];
 
-        let currentLvl = 0;
-        let map = allLevels[currentLvl];
+        let currentLevelIndex = 0;
+        let map = levels[currentLevelIndex];
         const tileSize = 64;
         let player = { x: 96, y: 96, angle: 0 };
         let keys = {};
         let gameActive = false;
 
-        function startGame() {
-            startScreen.style.display = "none";
-            gameActive = true;
-            if (!('ontouchstart' in window)) canvas.requestPointerLock();
-        }
-
-        function nextLevel() {
-            currentLvl++;
-            if (currentLvl < allLevels.length) {
-                map = allLevels[currentLvl];
-                player = { x: 96, y: 96, angle: 0 };
-                lvlText.innerText = currentLvl + 1;
-                winScreen.style.display = "none";
-                gameActive = true;
-                if (!('ontouchstart' in window)) canvas.requestPointerLock();
-            } else {
-                alert("🏆 YOU ARE THE MAZE MASTER! ALL LEVELS BEATEN!");
-                location.reload();
+        // --- LEVEL 3 SHIFTING LOGIC ---
+        function shiftWalls() {
+            if (currentLevelIndex === 2) {
+                wallStatus.innerText = "SHIFTING...";
+                wallStatus.style.color = "red";
+                
+                // Randomize internal walls (not player start or goal)
+                for (let y = 2; y < map.length - 2; y++) {
+                    for (let x = 2; x < map[y].length - 2; x++) {
+                        if (map[y][x] !== 2) {
+                            map[y][x] = Math.random() > 0.7 ? 1 : 0;
+                        }
+                    }
+                }
+                
+                setTimeout(() => {
+                    wallStatus.innerText = "STABLE";
+                    wallStatus.style.color = "white";
+                }, 2000);
             }
         }
+        setInterval(shiftWalls, 60000); // 1 minute
 
+        startScreen.onclick = () => { canvas.requestPointerLock(); };
+        document.addEventListener("pointerlockchange", () => {
+            gameActive = (document.pointerLockElement === canvas);
+            startScreen.style.display = gameActive ? "none" : "flex";
+        });
+
+        document.onmousemove = (e) => { if(gameActive) player.angle += e.movementX * 0.003; };
         window.onkeydown = (e) => keys[e.key.toLowerCase()] = true;
-        window.onkeydown = (e) => {
-    keys[e.key.toLowerCase()] = true;
-    
-    // --- THE SKIP CHEAT ---
-    if (e.key.toLowerCase() === 'l') {
-        victory(); // This triggers the Win Screen instantly!
-    }
-};
-
         window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
-        document.onmousemove = (e) => { if (gameActive) player.angle += e.movementX * 0.003; };
-
-        const bind = (id, k) => {
-            const el = document.getElementById(id);
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[k] = true; });
-            el.addEventListener('touchend', (e) => { e.preventDefault(); keys[k] = false; });
-        };
-        bind("up", "w"); bind("down", "s"); bind("left", "a"); bind("right", "d");
 
         function loop() {
-            if (gameActive) {
+            if(gameActive) {
                 let nx = player.x, ny = player.y;
-                let ms = 3.5;
-                if (keys['w']) { nx += Math.cos(player.angle)*ms; ny += Math.sin(player.angle)*ms; }
-                if (keys['s']) { nx -= Math.cos(player.angle)*ms; ny -= Math.sin(player.angle)*ms; }
-                if (keys['a']) { nx += Math.sin(player.angle)*ms; ny -= Math.cos(player.angle)*ms; }
-                if (keys['d']) { nx -= Math.sin(player.angle)*ms; ny += Math.cos(player.angle)*ms; }
-
+                if(keys['w']) { nx += Math.cos(player.angle)*3.5; ny += Math.sin(player.angle)*3.5; }
+                if(keys['s']) { nx -= Math.cos(player.angle)*3.5; ny -= Math.sin(player.angle)*3.5; }
+                if(keys['a']) { nx += Math.sin(player.angle)*3.5; ny -= Math.cos(player.angle)*3.5; }
+                if(keys['d']) { nx -= Math.sin(player.angle)*3.5; ny += Math.cos(player.angle)*3.5; }
+                
                 let tx = Math.floor(nx/tileSize), ty = Math.floor(ny/tileSize);
-                if (map[ty] && map[ty][tx] === 0) { player.x = nx; player.y = ny; }
-                else if (map[ty] && map[ty][tx] === 2) {
+                if(map[ty] && map[ty][tx] === 0) { player.x = nx; player.y = ny; }
+                else if(map[ty] && map[ty][tx] === 2) {
                     gameActive = false;
-                    document.exitPointerLock?.();
-                    winScreen.style.display = "flex";
+                    document.exitPointerLock();
+                    winScreen.style.display = "block";
                 }
             }
 
@@ -162,24 +131,38 @@
             ctx.fillStyle = "#222"; ctx.fillRect(0,canvas.height/2,canvas.width,canvas.height/2);
 
             const fov = Math.PI / 3, rays = canvas.width / 4;
-            for (let i = 0; i < rays; i++) {
+            for(let i=0; i<rays; i++) {
                 let ra = (player.angle - fov/2) + (i / rays) * fov;
                 let d = 0, hit = 0;
-                while (hit === 0 && d < 1000) {
+                while(hit == 0 && d < 1000) {
                     d += 2;
                     let tx = Math.floor((player.x + Math.cos(ra)*d)/tileSize);
                     let ty = Math.floor((player.y + Math.sin(ra)*d)/tileSize);
-                    if (map[ty] && map[ty][tx] > 0) hit = map[ty][tx];
+                    if(map[ty] && map[ty][tx] > 0) hit = map[ty][tx];
                 }
-                let h = (tileSize * canvas.height) / (d * Math.cos(ra - player.angle));
-                let s = Math.max(0, 255 - (d / 4));
-                ctx.fillStyle = hit === 2 ? `rgb(${s}, ${s*0.8}, 0)` : `rgb(0, ${s}, ${s*0.5})`;
-                ctx.fillRect(i*4, (canvas.height-h)/2, 4, h);
+                let hh = (tileSize * canvas.height) / (d * Math.cos(ra - player.angle));
+                let shade = Math.max(0, 255 - (d / 4));
+                ctx.fillStyle = hit === 2 ? `rgb(${shade}, ${shade*0.8}, 0)` : `rgb(0, ${shade}, ${shade/3})`;
+                ctx.fillRect(i*4, (canvas.height-hh)/2, 4, hh);
             }
             requestAnimationFrame(loop);
         }
+
+        nextBtn.onclick = () => {
+            currentLevelIndex++;
+            if(currentLevelIndex < levels.length) {
+                map = levels[currentLevelIndex];
+                document.getElementById("lvl-num").innerText = currentLevelIndex + 1;
+                player = { x: 96, y: 96, angle: 0 };
+                winScreen.style.display = "none";
+                canvas.requestPointerLock();
+            } else {
+                alert("MAZE MASTER!");
+                location.reload();
+            }
+        };
+
         loop();
     </script>
 </body>
 </html>
-
